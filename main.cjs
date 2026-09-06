@@ -149,6 +149,15 @@ module.exports = async function activate(host) {
 
   const runningSources = new Map(); // id -> { sandbox, onRequest, inited, platforms }
   const updateAlertWaiters = new Map(); // id -> resolve({log, updateUrl}) —— 主动检测更新时挂起
+  // 更新自检节流:每天(UTC)首次启动放行音源脚本的自检,同一天内再启动则跳过。
+  const updateChecksFile = path.join(dataDir, 'update-checks.json');
+  const todayUtc = () => new Date().toISOString().slice(0, 10);
+  let updateCheckToday = readJson(updateChecksFile, {}).lastCheckDate || null;
+  const markUpdateChecked = () => {
+    updateCheckToday = todayUtc();
+    writeJson(updateChecksFile, { lastCheckDate: updateCheckToday });
+  };
+  const updateCheckAllowed = () => updateCheckToday !== todayUtc();
 
   const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
   const normalizeVersion = (value) => String(value || '').replace(/^v/iu, '').trim();
@@ -163,12 +172,29 @@ module.exports = async function activate(host) {
       request(url, options, callback) {
         if (typeof options === 'function') { callback = options; options = {}; }
         const isUpdateCheck = /checkUpdate=/iu.test(String(url));
+        if (isUpdateCheck && !updateCheckAllowed()) {
+          // 今天已经检测过:静默跳过,红点沿用已有状态。
+          setImmediate(() => callback(new Error('update check skipped (already checked today)'), null));
+          return;
+        }
         try {
           lxHttpRequest(url, options || {}, (error, response) => {
             if (isUpdateCheck) {
               const status = Number(response?.statusCode ?? response?.status ?? 0);
               if (error || (status && status >= 400)) entry.updateCheckFailed = true;
               else entry.updateCheckFailed = false;
+              if (!error && (!status || status < 400)) {
+                // 今天首次放行的自检:记录日期并重置红点,音源若上报更新会再次点亮。
+                if (updateCheckAllowed()) {
+                  markUpdateChecked();
+                  const record = sources.find((item) => item.id === sourceId);
+                  if (record && record.hasUpdate) {
+                    record.hasUpdate = false;
+                    persistSources();
+                    notifyRenderer('sources-changed', {});
+                  }
+                }
+              }
             }
             callback(error, response);
           });
@@ -915,6 +941,8 @@ module.exports = async function activate(host) {
       const id = String(payload?.id || '');
       const record = sources.find((item) => item.id === id);
       if (!record) throw new Error('音源不存在');
+      // 手动更新不受每日节流限制,并视为今天已完成检测。
+      markUpdateChecked();
       const applyDownloaded = (code, note) => {
         stopSourceRuntime(id);
         const updated = registerSource({ code, origin: record.origin, fallbackName: record.name });
@@ -1144,6 +1172,11 @@ module.exports = async function activate(host) {
       log('WARN', `streaming patch failed: ${error.message}`);
     }
   };
+
+  // 音源运行时启动:脚本初始化时会自带每日一次的更新自检。
+  for (const record of sources) {
+    try { startSourceRuntime(record); } catch (error) { log('WARN', `source "${record.name}" failed to start: ${error.message}`); }
+  }
 
   void startStreamProxy();
   patchStreamingRecentSearches();
