@@ -24,6 +24,7 @@ const state = {
 };
 
 let refreshSeq = 0;
+let stateEverLoaded = false;
 const refreshState = async () => {
   const seq = ++refreshSeq;
   try {
@@ -33,6 +34,8 @@ const refreshState = async () => {
     state.sources = Array.isArray(next.sources) ? next.sources : [];
     state.accounts = next.accounts || { netease: false, qqmusic: false };
     state.hookReady = Boolean(next.hookReady);
+    stateEverLoaded = true;
+    renderAnchorLabel();
     renderAnchorDot();
     mod.console?.log?.(`[lx-resolver] state ok: mode=${state.mode} sources=${state.sources.length}`);
   } catch (error) {
@@ -586,6 +589,7 @@ window.addEventListener('blur', onWindowBlur);
 void refreshState();
 const watchdog = setInterval(() => {
   try { ensureAnchor(); } catch { /* noop */ }
+  if (!stateEverLoaded) { void refreshState().catch(() => {}); }
 }, 800);
 ensureAnchor();
 
