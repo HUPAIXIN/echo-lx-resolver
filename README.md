@@ -1,4 +1,4 @@
-# LX 音源解析 (echo.lx-resolver)
+# ECHO 专用 LX 音源解析 (echo.lx-resolver)
 
 为 **ECHO**(Steam 版,配合 [ShinawaseLoader](https://github.com/ChunchunOwO/ShinawaseLoader) 使用)添加**解析源切换**:在社区歌曲源浏览页多出一个功能,可在 本地公共解析 / 账号解析 / 自定义洛雪(LX Music)音源 之间自由切换。
 
