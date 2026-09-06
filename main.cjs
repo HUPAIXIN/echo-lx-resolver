@@ -157,7 +157,16 @@ module.exports = async function activate(host) {
     updateCheckToday = todayUtc();
     writeJson(updateChecksFile, { lastCheckDate: updateCheckToday });
   };
-  const updateCheckAllowed = () => updateCheckToday !== todayUtc();
+  // 本次激活内所有音源的自检都放行一次;日期标记只拦截后续的启动。
+  let updateCheckAllowedThisBoot = updateCheckToday !== todayUtc();
+  let bootCheckMarked = false;
+  const allowUpdateCheck = () => {
+    if (updateCheckAllowedThisBoot && !bootCheckMarked) {
+      bootCheckMarked = true;
+      markUpdateChecked();
+    }
+    return updateCheckAllowedThisBoot;
+  };
 
   const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
   const normalizeVersion = (value) => String(value || '').replace(/^v/iu, '').trim();
@@ -172,7 +181,7 @@ module.exports = async function activate(host) {
       request(url, options, callback) {
         if (typeof options === 'function') { callback = options; options = {}; }
         const isUpdateCheck = /checkUpdate=/iu.test(String(url));
-        if (isUpdateCheck && !updateCheckAllowed()) {
+        if (isUpdateCheck && !allowUpdateCheck()) {
           // 今天已经检测过:静默跳过,红点沿用已有状态。
           setImmediate(() => callback(new Error('update check skipped (already checked today)'), null));
           return;
@@ -368,7 +377,7 @@ module.exports = async function activate(host) {
   // 解析代次:每次切换解析源 +1。播放 URL 内嵌解析时的代次,播放器拉流时
   // 代理发现代次过期就用"当前选中的源"重新解析并 302 —— 保证切换立即生效,
   // 即使 ECHO 命中了自己的 2 分钟 preparedMediaCache 或恢复播放。
-  let resolveGeneration = 0;
+  let resolveGeneration = Date.now();
 
   const upstreamHeaders = (target) => {
     const headers = { 'User-Agent': MUSIC_UA };
