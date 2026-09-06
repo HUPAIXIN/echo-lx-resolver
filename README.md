@@ -1,6 +1,6 @@
 # LX 音源解析 (echo.lx-resolver)
 
-为 **ECHO**(Steam 版,配合 [ShinawaseLoader](https://github.com/ChunchunOwO/ShinawaseLoader) 使用)添加流媒体**解析源切换**:在流媒体页的音质选择旁多出一个下拉,可在 本地公共解析 / 账号解析 / 自定义洛雪(LX Music)音源 之间自由切换。
+为 **ECHO**(Steam 版,配合 [ShinawaseLoader](https://github.com/ChunchunOwO/ShinawaseLoader) 使用)添加**解析源切换**:在社区歌曲源浏览页多出一个功能,可在 本地公共解析 / 账号解析 / 自定义洛雪(LX Music)音源 之间自由切换。
 
 > ⚠️ **前置要求**:需要已安装 [ShinawaseLoader](https://github.com/ChunchunOwO/ShinawaseLoader) 并**启用 ECHO Streaming** 模块。洛雪音源脚本需要自备(本仓库不提供任何音源)。
 
@@ -16,7 +16,7 @@
 1. 前往 [Releases](https://github.com/HUPAIXIN/echo-lx-resolver/releases) 下载最新的 `LX-音源解析.echomod`
 2. 打开 ECHO → 侧栏 **Shinawase Loader → Mods → 导入**,选择下载的 `.echomod` 文件(或直接把 `.echomod` 拖入 Mods 页)
 3. 确保 **ECHO Streaming** 模块处于启用状态
-4. 进入流媒体页,音质选择旁会出现"解析音源"下拉
+4. 进入社区歌曲源浏览页,会出现"解析音源"功能
 
 ## 使用
 
