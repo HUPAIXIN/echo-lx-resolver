@@ -167,6 +167,7 @@ module.exports = async function activate(host) {
     }
     return updateCheckAllowedThisBoot;
   };
+  const updateCheckAllowed = allowUpdateCheck;
 
   const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
   const normalizeVersion = (value) => String(value || '').replace(/^v/iu, '').trim();
@@ -194,7 +195,7 @@ module.exports = async function activate(host) {
               else entry.updateCheckFailed = false;
               if (!error && (!status || status < 400)) {
                 // 今天首次放行的自检:记录日期并重置红点,音源若上报更新会再次点亮。
-                if (updateCheckAllowed()) {
+                if (allowUpdateCheck()) {
                   markUpdateChecked();
                   const record = sources.find((item) => item.id === sourceId);
                   if (record && record.hasUpdate) {

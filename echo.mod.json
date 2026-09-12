@@ -1,7 +1,7 @@
 {
   "id": "echo.lx-resolver",
   "name": "LX 音源解析",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "minEchoVersion": "26.8.15",
   "description": "(需启用ECHO Streaming)在社区歌曲源浏览页添加解析源切换:本地(公共解析)/账号/自定义洛雪音源。支持从URL或JS/JSON/TXT文件添加多个洛雪音源,右键音源可更新、编辑、删除。",
   "icon": "icon.svg",
